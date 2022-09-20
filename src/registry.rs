@@ -151,8 +151,17 @@ impl<M> Registry<M> {
         metric: M,
         unit: Option<Unit>,
     ) {
+        let help: String = help.into();
+
+        // In debug builds, we'll loudly complain if a help string ends with
+        // a .
+        debug_assert!(
+            !help.ends_with('.'),
+            "metric help shouldn't end with .",
+        );
+
         let name = name.into();
-        let help = help.into() + ".";
+        let help = help + ".";
         let descriptor = Descriptor {
             name: self
                 .prefix
@@ -377,6 +386,15 @@ mod tests {
         registry.register("my_counter", "My counter", counter);
 
         assert_eq!(1, registry.iter().count())
+    }
+
+    #[test]
+    #[should_panic]
+    fn register_with_invalid_help_text() {
+        let mut registry: Registry<Counter> = Registry::default();
+        let counter = Counter::default();
+
+        registry.register("my_counter", "Invalid help text.", counter);
     }
 
     #[test]
